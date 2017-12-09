@@ -1,0 +1,6 @@
+name: GolemaJump
+version: 1.0
+main: tk.hugo4715.golemamc.jump.GolemaJump
+commands: 
+    jump: 
+        desc: Jump
