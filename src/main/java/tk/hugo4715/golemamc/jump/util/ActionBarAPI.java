@@ -14,10 +14,10 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 
 public class ActionBarAPI implements Listener {
-	public static Plugin plugin;
-	public static boolean works = true;
-	public static String nmsver;
-	private static boolean useOldMethods = false;
+	public Plugin plugin;
+	public boolean works = true;
+	public String nmsver;
+	private boolean useOldMethods = false;
 
 	
 	public ActionBarAPI(JavaPlugin plugin) {
@@ -33,7 +33,7 @@ public class ActionBarAPI implements Listener {
 			useOldMethods = true;
 		}
 	}
-	public static void sendActionBar(Player player, String message) {
+	public void sendActionBar(Player player, String message) {
 		try {
 			Class<?> c1 = Class.forName("org.bukkit.craftbukkit." + nmsver + ".entity.CraftPlayer");
 			Object p = c1.cast(player);
@@ -64,7 +64,7 @@ public class ActionBarAPI implements Listener {
 		}
 	}
 
-	public static void sendActionBar(final Player player, final String message, int duration) {
+	public void sendActionBar(final Player player, final String message, int duration) {
 		sendActionBar(player, message);
 
 		if (duration >= 0) {
@@ -90,11 +90,11 @@ public class ActionBarAPI implements Listener {
 		}
 	}
 
-	public static void sendActionBarToAllPlayers(String message) {
+	public void sendActionBarToAllPlayers(String message) {
 		sendActionBarToAllPlayers(message, -1);
 	}
 
-	public static void sendActionBarToAllPlayers(String message, int duration) {
+	public void sendActionBarToAllPlayers(String message, int duration) {
 		for (Player p : Bukkit.getOnlinePlayers()) {
 			sendActionBar(p, message, duration);
 		}

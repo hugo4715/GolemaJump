@@ -50,6 +50,7 @@ public class GolemaJump extends JavaPlugin{
 	private Db db;
 
 	private List<HologramBuilder> leaderboardLines = null;
+	
 	@Override
 	public void onEnable() {
 		saveDefaultConfig();
@@ -101,7 +102,6 @@ public class GolemaJump extends JavaPlugin{
 					p.getInventory().setItem(i, inv.getItem(i));
 				}
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 
@@ -134,39 +134,32 @@ public class GolemaJump extends JavaPlugin{
 		long deltaMS = System.currentTimeMillis()-getJumpsTimes().get(p);
 		p.sendMessage(PREFIX + ChatColor.GRAY + "Vous avez finit le jump en " + ChatColor.YELLOW + TimeUtil.intervalToHumanReadableTime(deltaMS));
 
-		//TODO commit to mysql
-		try {
-			PreparedStatement ps = getMYsql().getConnection().prepareStatement(SQL_SELECT_BY_UUID.replace("%jump%", jumpsNames.get(p).getName()));
+		try(PreparedStatement ps = getMYsql().getConnection().prepareStatement(SQL_SELECT_BY_UUID.replace("%jump%", jumpsNames.get(p).getName()))) {
 			ps.setString(1, p.getUniqueId().toString());
-			ResultSet rs = ps.executeQuery();
+			try(ResultSet rs = ps.executeQuery()){
+				if(rs.next()){
+					long best = rs.getLong("best");
 
-			if(rs.next()){
-				long best = rs.getLong("best");
-
-				if(best == 0 || deltaMS < best){
-					onBestScore(p, deltaMS);
+					if(best == 0 || deltaMS < best){
+						onBestScore(p, deltaMS);
+					}else{
+						p.sendMessage(PREFIX + ChatColor.YELLOW + "Votre meilleur temps est de " + ChatColor.YELLOW + TimeUtil.intervalToHumanReadableTime(best)); 
+						onScore(p,deltaMS);
+					}
 				}else{
-					p.sendMessage(PREFIX + ChatColor.YELLOW + "Votre meilleur temps est de " + ChatColor.YELLOW + TimeUtil.intervalToHumanReadableTime(best)); 
-					onScore(p,deltaMS);
+					onBestScore(p, deltaMS);
 				}
-			}else{
-				onBestScore(p, deltaMS);
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-
-		//TODO check if best time
-		//TODO broadcast if best
-
 
 		leaveJump(p);
 	}
 
 	private void onScore(Player p , long time) {
 		//do not send message here
-		try {
-			PreparedStatement ps = getMYsql().getConnection().prepareStatement(SQL_UPDATE_LAST.replace("%jump%", jumpsNames.get(p).getName()));
+		try (PreparedStatement ps = getMYsql().getConnection().prepareStatement(SQL_UPDATE_LAST.replace("%jump%", jumpsNames.get(p).getName()))){
 			ps.setString(1, p.getUniqueId().toString());
 			ps.setString(2, p.getName());
 			ps.setLong(3, time);
@@ -180,8 +173,7 @@ public class GolemaJump extends JavaPlugin{
 
 	public void onBestScore(Player p, long timeMS){
 
-		try {
-			PreparedStatement ps = getMYsql().getConnection().prepareStatement(SQL_UPDATE_BEST.replace("%jump%", jumpsNames.get(p).getName()));
+		try(PreparedStatement ps = getMYsql().getConnection().prepareStatement(SQL_UPDATE_BEST.replace("%jump%", jumpsNames.get(p).getName()))) {
 			ps.setString(1, p.getUniqueId().toString());
 			ps.setString(2, p.getName());
 			ps.setLong(3, timeMS);
@@ -229,16 +221,16 @@ public class GolemaJump extends JavaPlugin{
 				double y = 0;
 				double linesY = 0.25;
 				
-				try {
-					PreparedStatement ps = getMYsql().getConnection().prepareStatement(SQL_SELECT_BY_BEST.replace("%jump%", info.getName()));
+				try(PreparedStatement ps = getMYsql().getConnection().prepareStatement(SQL_SELECT_BY_BEST.replace("%jump%", info.getName()))) {
 					ps.setInt(1, 5);
 					
-					ResultSet rs = ps.executeQuery();
-					int index = 1;
-					while(rs.next()){
-						holos.add(new HologramBuilder().editLocation(loc.clone().add(0,y, 0)).editMessage(ChatColor.YELLOW + "#" + index + ChatColor.AQUA + rs.getString("name")));
-						y+=linesY;
-						index++;
+					try(ResultSet rs = ps.executeQuery()){
+						int index = 1;
+						while(rs.next()){
+							holos.add(new HologramBuilder().editLocation(loc.clone().add(0,y, 0)).editMessage(ChatColor.YELLOW + "#" + index + ChatColor.AQUA + rs.getString("name")));
+							y+=linesY;
+							index++;
+						}
 					}
 				} catch (SQLException e) {
 					e.printStackTrace();
@@ -282,8 +274,5 @@ public class GolemaJump extends JavaPlugin{
 	public static GolemaJump get(){
 		return getPlugin(GolemaJump.class);
 	}
-
-	
-
 
 }

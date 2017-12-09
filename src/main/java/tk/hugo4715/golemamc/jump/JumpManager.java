@@ -1,6 +1,7 @@
 package tk.hugo4715.golemamc.jump;
 
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.List;
 import java.util.Map;
 
@@ -92,8 +93,8 @@ public class JumpManager {
 		}
 		
 		private void init(){
-			try {
-				GolemaJump.get().getMYsql().getConnection().createStatement().execute(GolemaJump.SQL_CREATE_TABLE.replace("%jump%", getName()));
+			try (Statement ps = GolemaJump.get().getMYsql().getConnection().createStatement()){
+				ps.execute(GolemaJump.SQL_CREATE_TABLE.replace("%jump%", getName()));
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}
